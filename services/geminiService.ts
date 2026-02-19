@@ -67,8 +67,16 @@ export const generateHeroBg = async (
       1. SAFE AREA GIGANTE (80% TOPO): Os 80% superiores da imagem DEVEM ser espaço negativo limpo.
       2. POSIÇÃO DOS SUJEITOS (BOTTOM ANCHOR): ${subjectsTermUpper} deve(m) estar ANCORADA(S) NA BASE DA TELA.
       3. PÉS/CORPO: Estenda o corpo se necessário.`
-      : `[INSTRUÇÃO: HERO COM PESSOA]
-      Crie uma imagem de background para Hero Section. Integre ${subjectsTerm} das imagens de referência como ${subjectsTermEn} principal(is), com recorte limpo e composição realista.`;
+      : `[INSTRUÇÃO: PUBLICIDADE HIGH-END - INTEGRAÇÃO PERFEITA]
+      ATUE COMO UM RETOCADOR PROFISSIONAL. Sua tarefa é criar um Hero Background que integre ${subjectsTerm} (INPUT) na cena com PERFEIÇÃO FOTOREALISTA.
+      O RESULTADO DEVE PARECER UMA FOTO ÚNICA DE ESTÚDIO, NÃO UMA MONTAGEM.
+
+      MANDATÓRIO PARA INTEGRAÇÃO:
+      1. LIGHT WRAP & RIM LIGHT: A luz do fundo deve contornar sutilmente o sujeito (Rim Light) para uni-lo à cena.
+      2. COR E TOM: Faça o "Color Matching" perfeito entre ${subjectsTerm} e o fundo. Ajuste temperatura e contraste para unificação total.
+      3. SOMBRAS: Projete sombras de contato (Contact Shadows) realistas no chão/vidro. O sujeito deve ter "peso", não flutuar.
+      4. ESCALA & PROPORÇÃO (CRÍTICO): Se houver múltiplas pessoas, mantenha a PROPORÇÃO NATURAL entre elas. Nenhuma deve parecer gigante ou minúscula em relação à outra, a menos que a perspectiva exija. Mantenha os níveis dos olhos (Eye Level) coerentes.
+      5. PROFUNDIDADE: Coloque partículas de luz ou neblina sutil NA FRENTE de partes do sujeito para "enterrá-lo" na cena.`;
   }
 
   // Construct the prompt
@@ -95,11 +103,19 @@ ${settings.visualIdentity}
 - Iluminação: ${settings.lighting}
 - Grain: ${settings.grain ? 'On' : 'Off'}
 
+[ILUMINAÇÃO & AMBIENTAÇÃO - CRÍTICO]
+- Setup de Luz: Cinematic Studio Lighting, Softbox Principal + Rim Light Colorida para separar do fundo.
+- Atmosfera: Volumetric Fog suave, profundidade de campo (DOF) nas bordas, partículas de poeira/luz.
+- INTEGRAÇÃO VISUAL: Color Match obrigatório entre INPUTS e FUNDO. Use Global Illumination.
+- HARMONIA DE CENA: Todos os elementos devem compartilhar a mesma FONTE DE LUZ e DIREÇÃO DE SOMBRA.
+
 [REGRAS DE QUALIDADE]
-- Fotorealismo, render 8k, Octane Render style.
+- Estilo: Fotografia Publicitária Premiada (Cannes Lions), 8k, Octane Render, Ray Tracing.
 - Sem texto legível (exceto o que estiver dentro da tela do mockup/camiseta).
 - Sem marcas d'água.
-- Contraste suficiente para tipografia por cima (AAA quando possível).
+- Contraste absoluto para tipografia branca sobre o fundo.
+- ZERO "STICKER EFFECT" (parecer colado). Use Light Wrap.
+- ZERO "GIANT/TINY SYNDROME": Pessoas e objetos devem ter escala realista entre si.
 
 [NEGATIVE]
 ${settings.negativePrompt}
