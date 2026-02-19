@@ -72,11 +72,11 @@ export const generateHeroBg = async (
       O RESULTADO DEVE PARECER UMA FOTO ÚNICA DE ESTÚDIO, NÃO UMA MONTAGEM.
 
       MANDATÓRIO PARA INTEGRAÇÃO:
-      1. LIGHT WRAP & RIM LIGHT: A luz do fundo deve contornar sutilmente o sujeito (Rim Light) para uni-lo à cena.
-      2. COR E TOM: Faça o "Color Matching" perfeito entre ${subjectsTerm} e o fundo. Ajuste temperatura e contraste para unificação total.
-      3. SOMBRAS: Projete sombras de contato (Contact Shadows) realistas no chão/vidro. O sujeito deve ter "peso", não flutuar.
-      4. ESCALA & PROPORÇÃO (CRÍTICO): Se houver múltiplas pessoas, mantenha a PROPORÇÃO NATURAL entre elas. Nenhuma deve parecer gigante ou minúscula em relação à outra, a menos que a perspectiva exija. Mantenha os níveis dos olhos (Eye Level) coerentes.
-      5. PROFUNDIDADE: Coloque partículas de luz ou neblina sutil NA FRENTE de partes do sujeito para "enterrá-lo" na cena.`;
+      1. ENQUADRAMENTO (CRÍTICO): CORTE NA CINTURA ("Waist-Up" / "Medium Shot"). As pessoas DEVEM nascer da borda inferior da imagem. NUNCA mostre os pés ou pernas inteiras.
+      2. ANCORAGEM: A base da imagem deve cortar o torso/cintura dos sujeitos. Eles não podem flutuar no meio do nada.
+      3. ESCALA REALISTA: Os sujeitos devem ocupar uma porção significativa da altura (aprox. 50-70% da altura da imagem), impondo presença.
+      4. ILUMINAÇÃO: Use Rim Light para separar o sujeito do fundo escuro.
+      5. COLOR MATCH: Unifique a temperatura de cor do sujeito com o ambiente (Color Grading).`;
   }
 
   // Construct the prompt
@@ -119,7 +119,7 @@ ${settings.visualIdentity}
 
 [NEGATIVE]
 ${settings.negativePrompt}
-+ “no text, no logo, no watermark, no distorted face, no low-res, no busy background at top”
++ “feet, legs, full body, tiny people, floating people, distorted face, shoes, floor, ground, walking people”
 `.trim();
 
   // Prepare parts
