@@ -146,14 +146,14 @@ ${settings.negativePrompt}
     }
   }
 
-  try {
+   try {
     const response = await ai.models.generateContent({
-      model: 'gemini-3-pro-image-preview',
+      model: 'gemini-2.5-flash-image',
       contents: { parts: parts },
       config: {
         imageConfig: {
           aspectRatio: settings.aspectRatio,
-          imageSize: settings.quality,
+          // imageSize is removed as it is not supported by gemini-2.5-flash-image
         }
       }
     });
