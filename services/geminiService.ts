@@ -25,9 +25,8 @@ export const generateHeroBg = async (
   settings: GenerationSettings
 ): Promise<{ imageUrl: string; finalPrompt: string }> => {
   
-  // Use user-provided API Key directly
-  const API_KEY = "AIzaSyA_cJEjCnx-4uRittyppeYmg6uAYxN5BoQ";
-  const ai = new GoogleGenAI({ apiKey: API_KEY });
+  // Use API Key from environment variable
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
   // Determine instruction based on whether we are transforming an existing image
   const isTransformation = !!settings.baseImage;
@@ -67,16 +66,8 @@ export const generateHeroBg = async (
       1. SAFE AREA GIGANTE (80% TOPO): Os 80% superiores da imagem DEVEM ser espaço negativo limpo.
       2. POSIÇÃO DOS SUJEITOS (BOTTOM ANCHOR): ${subjectsTermUpper} deve(m) estar ANCORADA(S) NA BASE DA TELA.
       3. PÉS/CORPO: Estenda o corpo se necessário.`
-      : `[INSTRUÇÃO: PUBLICIDADE HIGH-END - INTEGRAÇÃO PERFEITA]
-      ATUE COMO UM RETOCADOR PROFISSIONAL. Sua tarefa é criar um Hero Background que integre ${subjectsTerm} (INPUT) na cena com PERFEIÇÃO FOTOREALISTA.
-      O RESULTADO DEVE PARECER UMA FOTO ÚNICA DE ESTÚDIO, NÃO UMA MONTAGEM.
-
-      MANDATÓRIO PARA INTEGRAÇÃO:
-      1. ENQUADRAMENTO (CRÍTICO): CORTE NA CINTURA ("Waist-Up" / "Medium Shot"). As pessoas DEVEM nascer da borda inferior da imagem. NUNCA mostre os pés ou pernas inteiras.
-      2. ANCORAGEM: A base da imagem deve cortar o torso/cintura dos sujeitos. Eles não podem flutuar no meio do nada.
-      3. ESCALA REALISTA: Os sujeitos devem ocupar uma porção significativa da altura (aprox. 50-70% da altura da imagem), impondo presença.
-      4. ILUMINAÇÃO: Use Rim Light para separar o sujeito do fundo escuro.
-      5. COLOR MATCH: Unifique a temperatura de cor do sujeito com o ambiente (Color Grading).`;
+      : `[INSTRUÇÃO: HERO COM PESSOA]
+      Crie uma imagem de background para Hero Section. Integre ${subjectsTerm} das imagens de referência como ${subjectsTermEn} principal(is), com recorte limpo e composição realista.`;
   }
 
   // Construct the prompt
@@ -103,23 +94,15 @@ ${settings.visualIdentity}
 - Iluminação: ${settings.lighting}
 - Grain: ${settings.grain ? 'On' : 'Off'}
 
-[ILUMINAÇÃO & AMBIENTAÇÃO - CRÍTICO]
-- Setup de Luz: Cinematic Studio Lighting, Softbox Principal + Rim Light Colorida para separar do fundo.
-- Atmosfera: Volumetric Fog suave, profundidade de campo (DOF) nas bordas, partículas de poeira/luz.
-- INTEGRAÇÃO VISUAL: Color Match obrigatório entre INPUTS e FUNDO. Use Global Illumination.
-- HARMONIA DE CENA: Todos os elementos devem compartilhar a mesma FONTE DE LUZ e DIREÇÃO DE SOMBRA.
-
 [REGRAS DE QUALIDADE]
-- Estilo: Fotografia Publicitária Premiada (Cannes Lions), 8k, Octane Render, Ray Tracing.
+- Fotorealismo, render 8k, Octane Render style.
 - Sem texto legível (exceto o que estiver dentro da tela do mockup/camiseta).
 - Sem marcas d'água.
-- Contraste absoluto para tipografia branca sobre o fundo.
-- ZERO "STICKER EFFECT" (parecer colado). Use Light Wrap.
-- ZERO "GIANT/TINY SYNDROME": Pessoas e objetos devem ter escala realista entre si.
+- Contraste suficiente para tipografia por cima (AAA quando possível).
 
 [NEGATIVE]
 ${settings.negativePrompt}
-+ “feet, legs, full body, tiny people, floating people, distorted face, shoes, floor, ground, walking people”
++ “no text, no logo, no watermark, no distorted face, no low-res, no busy background at top”
 `.trim();
 
   // Prepare parts
@@ -162,14 +145,14 @@ ${settings.negativePrompt}
     }
   }
 
-   try {
+  try {
     const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash-image',
+      model: 'gemini-3-pro-image-preview',
       contents: { parts: parts },
       config: {
         imageConfig: {
           aspectRatio: settings.aspectRatio,
-          // imageSize is removed as it is not supported by gemini-2.5-flash-image
+          imageSize: settings.quality,
         }
       }
     });
