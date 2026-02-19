@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { generateHeroBg } from './services/geminiService';
-import { GenerationSettings, GenerationResult, Preset } from './types';
+import { GenerationSettings, GenerationResult, Preset, GenerationMode } from './types';
 import { Input, TextArea, Select, Slider } from './components/ui/Input';
 import { Button } from './components/ui/Button';
 import { PreviewArea } from './components/PreviewArea';
@@ -144,8 +144,6 @@ const App: React.FC = () => {
     ? settings.personImages.length > 0 
     : !!settings.mockupImage;
 
-
-  // --- MAIN APP RENDER ---
   return (
     <div className="min-h-screen bg-background text-zinc-200 selection:bg-primary selection:text-white">
       <header className="border-b border-white/5 bg-background/80 backdrop-blur-md sticky top-0 z-50">
@@ -154,12 +152,10 @@ const App: React.FC = () => {
              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-purple-600 flex items-center justify-center font-bold text-white shadow-[0_0_15px_rgba(99,102,241,0.5)]">H</div>
              <div>
                <h1 className="text-lg font-bold tracking-tight text-white">Hero BG Studio</h1>
-               <p className="text-[10px] uppercase tracking-widest text-emerald-500 font-medium">Offline Demo Mode</p>
+               <p className="text-[10px] uppercase tracking-widest text-gray-500 font-medium">NanoBanana3 Powered</p>
              </div>
           </div>
-          <div className="flex items-center gap-4">
-             <span className="text-xs text-zinc-500">API Disconnected</span>
-          </div>
+          <a href="https://ai.google.dev/gemini-api/docs" target="_blank" className="text-xs text-zinc-500 hover:text-zinc-300">Docs</a>
         </div>
       </header>
 

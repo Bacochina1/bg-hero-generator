@@ -39,3 +39,10 @@ export interface Preset {
   description: string;
   visualIdentity: string;
 }
+
+declare global {
+  interface AIStudio {
+    hasSelectedApiKey: () => Promise<boolean>;
+    openSelectKey: () => Promise<void>;
+  }
+}
