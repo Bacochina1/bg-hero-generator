@@ -167,7 +167,7 @@ ${settings.negativePrompt}
 
   try {
     const response = await ai.models.generateContent({
-      model: 'gemini-3-pro-image-preview',
+      model: 'gemini-3.1-flash-image-preview',
       contents: { parts: parts },
       config: {
         imageConfig: {
