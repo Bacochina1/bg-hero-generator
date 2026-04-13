@@ -3,10 +3,13 @@ export type PersonPosition = 'left' | 'right' | 'center';
 export type SafeArea = 'left' | 'right' | 'center';
 export type LightingStyle = 'Soft studio' | 'Neon glow' | 'Rim light' | 'Cinematic';
 
+export type GenerationMode = 'person' | 'mockup';
 export type ImageQuality = '1K' | '2K' | '4K';
 
 export interface GenerationSettings {
+  mode: GenerationMode; 
   personImages: File[]; 
+  mockupImages: File[]; // Changed from mockupImage: File | null to allow multiple
   elementImages: File[];
   elementsText: string;
   visualIdentity: string;
@@ -14,7 +17,7 @@ export interface GenerationSettings {
   safeArea: SafeArea;
   aspectRatio: AspectRatio;
   resolution: string; 
-  quality: ImageQuality; // New field
+  quality: ImageQuality; 
   generateVertical: boolean;
   styleStrength: number; 
   depthOfField: number; 

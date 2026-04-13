@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { generateHeroBg } from './services/geminiService';
-import { GenerationSettings, GenerationResult, Preset } from './types';
+import { GenerationSettings, GenerationResult, Preset, GenerationMode } from './types';
 import { Input, TextArea, Select, Slider } from './components/ui/Input';
 import { Button } from './components/ui/Button';
 import { PreviewArea } from './components/PreviewArea';
@@ -24,7 +24,9 @@ const PRESETS: Preset[] = [
 ];
 
 const INITIAL_SETTINGS: GenerationSettings = {
+  mode: 'person',
   personImages: [], 
+  mockupImages: [],
   elementImages: [],
   elementsText: "",
   visualIdentity: "",
@@ -41,7 +43,7 @@ const INITIAL_SETTINGS: GenerationSettings = {
   negativePrompt: ""
 };
 
-const MAX_PEOPLE = 5;
+const MAX_IMAGES = 5;
 
 const App: React.FC = () => {
   const [settings, setSettings] = useState<GenerationSettings>(INITIAL_SETTINGS);
@@ -62,7 +64,9 @@ const App: React.FC = () => {
   };
 
   const executeGeneration = async (config: GenerationSettings) => {
-    if (config.personImages.length === 0) return;
+    // Validation
+    if (config.mode === 'person' && config.personImages.length === 0) return;
+    if (config.mode === 'mockup' && config.mockupImages.length === 0) return;
     
     setIsGenerating(true);
     setError(null);
@@ -109,7 +113,7 @@ const App: React.FC = () => {
     executeGeneration(mobileSettings);
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, field: 'personImages' | 'elementImages') => {
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, field: 'personImages' | 'elementImages' | 'mockupImages') => {
     if (e.target.files && e.target.files.length > 0) {
       if (field === 'elementImages') {
         const files = Array.from(e.target.files).slice(0, 6);
@@ -117,24 +121,26 @@ const App: React.FC = () => {
       } else {
         const newFiles = Array.from(e.target.files);
         setSettings(prev => {
-          const currentCount = prev.personImages.length;
-          const remainingSlots = MAX_PEOPLE - currentCount;
+          const currentCount = prev[field].length;
+          const remainingSlots = MAX_IMAGES - currentCount;
           const filesToAdd = newFiles.slice(0, remainingSlots);
-          return { ...prev, personImages: [...prev.personImages, ...filesToAdd] };
+          return { ...prev, [field]: [...prev[field], ...filesToAdd] };
         });
         e.target.value = '';
       }
     }
   };
 
-  const removePersonImage = (index: number) => {
+  const removeImage = (index: number, field: 'personImages' | 'mockupImages') => {
     setSettings(prev => ({
       ...prev,
-      personImages: prev.personImages.filter((_, i) => i !== index)
+      [field]: prev[field].filter((_, i) => i !== index)
     }));
   };
 
-  const canGenerate = settings.personImages.length > 0;
+  const canGenerate = settings.mode === 'person' 
+    ? settings.personImages.length > 0 
+    : settings.mockupImages.length > 0;
 
   return (
     <div className="min-h-screen bg-background text-zinc-200 selection:bg-primary selection:text-white">
@@ -156,39 +162,88 @@ const App: React.FC = () => {
         {/* Left Column: Controls */}
         <div className="lg:col-span-4 flex flex-col gap-8 h-[calc(100vh-100px)] overflow-y-auto pr-2 pb-20 custom-scrollbar">
           
-          {/* Section A: Subject Upload */}
+          {/* Mode Selector */}
+          <div className="bg-surfaceHighlight p-1 rounded-lg flex gap-1 border border-zinc-700">
+            <button 
+              onClick={() => setSettings(s => ({...s, mode: 'person'}))}
+              className={`flex-1 py-2 rounded-md text-xs font-semibold uppercase tracking-wide transition-all \${settings.mode === 'person' ? 'bg-zinc-700 text-white shadow-sm' : 'text-gray-400 hover:text-white hover:bg-zinc-800'}`}
+            >
+              Person / Team
+            </button>
+            <button 
+              onClick={() => setSettings(s => ({...s, mode: 'mockup'}))}
+              className={`flex-1 py-2 rounded-md text-xs font-semibold uppercase tracking-wide transition-all \${settings.mode === 'mockup' ? 'bg-zinc-700 text-white shadow-sm' : 'text-gray-400 hover:text-white hover:bg-zinc-800'}`}
+            >
+              3D Mockup
+            </button>
+          </div>
+
+          {/* Dynamic Section: Person Upload OR Mockup Upload */}
           <section className="animate-[fadeIn_0.3s_ease-out]">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-sm font-medium text-white flex items-center gap-2">
                 <span className="w-5 h-5 rounded-full bg-zinc-800 text-xs flex items-center justify-center text-gray-400">1</span>
-                Subject(s)
+                {settings.mode === 'person' ? 'Subject(s)' : 'Screen(s) / Print(s)'}
               </h3>
-              <span className="text-[10px] text-zinc-500 uppercase">{settings.personImages.length}/{MAX_PEOPLE} People</span>
+              <span className="text-[10px] text-zinc-500 uppercase">
+                {settings.mode === 'person' 
+                  ? `\${settings.personImages.length}/\${MAX_IMAGES} People` 
+                  : `\${settings.mockupImages.length}/\${MAX_IMAGES} Screens`}
+              </span>
             </div>
 
-            {settings.personImages.length === 0 ? (
-              <div className="relative group cursor-pointer border-2 border-dashed border-zinc-700 hover:border-zinc-500 rounded-xl transition-all h-32 flex items-center justify-center bg-zinc-900/50 overflow-hidden">
-                 <input type="file" accept="image/*" multiple onChange={(e) => handleFileChange(e, 'personImages')} className="absolute inset-0 opacity-0 cursor-pointer z-10"/>
-                 <div className="text-center p-4">
-                    <p className="text-zinc-400 text-sm group-hover:text-white">Upload Subject</p>
-                    <p className="text-zinc-600 text-xs mt-1">PNG/JPG · Up to {MAX_PEOPLE} images</p>
-                 </div>
-              </div>
+            {settings.mode === 'person' ? (
+              // --- PERSON UPLOAD UI ---
+              settings.personImages.length === 0 ? (
+                <div className="relative group cursor-pointer border-2 border-dashed border-zinc-700 hover:border-zinc-500 rounded-xl transition-all h-32 flex items-center justify-center bg-zinc-900/50 overflow-hidden">
+                   <input type="file" accept="image/*" multiple onChange={(e) => handleFileChange(e, 'personImages')} className="absolute inset-0 opacity-0 cursor-pointer z-10"/>
+                   <div className="text-center p-4">
+                      <p className="text-zinc-400 text-sm group-hover:text-white">Upload Subject</p>
+                      <p className="text-zinc-600 text-xs mt-1">PNG/JPG · Up to {MAX_IMAGES} images</p>
+                   </div>
+                </div>
+              ) : (
+                <div className="grid grid-cols-3 gap-3">
+                   {settings.personImages.map((img, idx) => (
+                      <div key={idx} className="relative aspect-square rounded-lg overflow-hidden border border-zinc-700 bg-zinc-900 group">
+                         <img src={URL.createObjectURL(img)} className="w-full h-full object-cover"/>
+                         <button onClick={() => removeImage(idx, 'personImages')} className="absolute top-1 right-1 w-5 h-5 bg-black/70 hover:bg-red-500 text-white rounded-full flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-all">×</button>
+                      </div>
+                   ))}
+                   {settings.personImages.length < MAX_IMAGES && (
+                      <div className="relative aspect-square rounded-lg border-2 border-dashed border-zinc-700 hover:border-zinc-500 bg-zinc-900/30 flex flex-col items-center justify-center cursor-pointer group">
+                         <input type="file" accept="image/*" multiple onChange={(e) => handleFileChange(e, 'personImages')} className="absolute inset-0 opacity-0 cursor-pointer z-10"/>
+                         <span className="text-2xl text-zinc-500 group-hover:text-white">+</span>
+                      </div>
+                   )}
+                </div>
+              )
             ) : (
-              <div className="grid grid-cols-3 gap-3">
-                 {settings.personImages.map((img, idx) => (
-                    <div key={idx} className="relative aspect-square rounded-lg overflow-hidden border border-zinc-700 bg-zinc-900 group">
-                       <img src={URL.createObjectURL(img)} className="w-full h-full object-cover"/>
-                       <button onClick={() => removePersonImage(idx)} className="absolute top-1 right-1 w-5 h-5 bg-black/70 hover:bg-red-500 text-white rounded-full flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-all">×</button>
-                    </div>
-                 ))}
-                 {settings.personImages.length < MAX_PEOPLE && (
-                    <div className="relative aspect-square rounded-lg border-2 border-dashed border-zinc-700 hover:border-zinc-500 bg-zinc-900/30 flex flex-col items-center justify-center cursor-pointer group">
-                       <input type="file" accept="image/*" multiple onChange={(e) => handleFileChange(e, 'personImages')} className="absolute inset-0 opacity-0 cursor-pointer z-10"/>
-                       <span className="text-2xl text-zinc-500 group-hover:text-white">+</span>
-                    </div>
-                 )}
-              </div>
+              // --- MOCKUP UPLOAD UI (NOW SUPPORTS MULTIPLE) ---
+              settings.mockupImages.length === 0 ? (
+                <div className="relative group cursor-pointer border-2 border-dashed border-zinc-700 hover:border-zinc-500 rounded-xl transition-all h-32 flex items-center justify-center bg-zinc-900/50 overflow-hidden">
+                   <input type="file" accept="image/*" multiple onChange={(e) => handleFileChange(e, 'mockupImages')} className="absolute inset-0 opacity-0 cursor-pointer z-10"/>
+                   <div className="text-center p-4">
+                      <p className="text-zinc-400 text-sm group-hover:text-white">Upload Screenshot(s) / UI</p>
+                      <p className="text-zinc-600 text-xs mt-1">PNG/JPG · Up to {MAX_IMAGES} images</p>
+                   </div>
+                </div>
+              ) : (
+                <div className="grid grid-cols-3 gap-3">
+                   {settings.mockupImages.map((img, idx) => (
+                      <div key={idx} className="relative aspect-square rounded-lg overflow-hidden border border-zinc-700 bg-zinc-900 group">
+                         <img src={URL.createObjectURL(img)} className="w-full h-full object-cover"/>
+                         <button onClick={() => removeImage(idx, 'mockupImages')} className="absolute top-1 right-1 w-5 h-5 bg-black/70 hover:bg-red-500 text-white rounded-full flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-all">×</button>
+                      </div>
+                   ))}
+                   {settings.mockupImages.length < MAX_IMAGES && (
+                      <div className="relative aspect-square rounded-lg border-2 border-dashed border-zinc-700 hover:border-zinc-500 bg-zinc-900/30 flex flex-col items-center justify-center cursor-pointer group">
+                         <input type="file" accept="image/*" multiple onChange={(e) => handleFileChange(e, 'mockupImages')} className="absolute inset-0 opacity-0 cursor-pointer z-10"/>
+                         <span className="text-2xl text-zinc-500 group-hover:text-white">+</span>
+                      </div>
+                   )}
+                </div>
+              )
             )}
           </section>
 
@@ -207,8 +262,8 @@ const App: React.FC = () => {
             </div>
             <TextArea label="Style Description" value={settings.visualIdentity} onChange={(e) => setSettings({...settings, visualIdentity: e.target.value})} className="h-32"/>
             <div className="grid grid-cols-2 gap-4">
-              <Slider label="Style Strength" min={0} max={100} value={settings.styleStrength} valueDisplay={`${settings.styleStrength}%`} onChange={(e) => setSettings({...settings, styleStrength: Number(e.target.value)})}/>
-              <Slider label="Depth of Field" min={0} max={100} value={settings.depthOfField} valueDisplay={`${settings.depthOfField}%`} onChange={(e) => setSettings({...settings, depthOfField: Number(e.target.value)})}/>
+              <Slider label="Style Strength" min={0} max={100} value={settings.styleStrength} valueDisplay={\`\${settings.styleStrength}%\`} onChange={(e) => setSettings({...settings, styleStrength: Number(e.target.value)})}/>
+              <Slider label="Depth of Field" min={0} max={100} value={settings.depthOfField} valueDisplay={\`\${settings.depthOfField}%\`} onChange={(e) => setSettings({...settings, depthOfField: Number(e.target.value)})}/>
             </div>
              <Select label="Lighting Style" value={settings.lighting} onChange={(e) => setSettings({...settings, lighting: e.target.value as any})}>
               <option value="Soft studio">Soft Studio</option>
@@ -218,8 +273,8 @@ const App: React.FC = () => {
             </Select>
              <div className="flex items-center justify-between bg-surfaceHighlight rounded-lg p-3 border border-zinc-700">
                <span className="text-sm text-gray-300">Add Film Grain</span>
-               <button onClick={() => setSettings(s => ({ ...s, grain: !s.grain }))} className={`w-10 h-5 rounded-full relative transition-colors ${settings.grain ? 'bg-primary' : 'bg-zinc-600'}`}>
-                 <div className={`absolute top-1 left-1 w-3 h-3 bg-white rounded-full transition-transform ${settings.grain ? 'translate-x-5' : 'translate-x-0'}`} />
+               <button onClick={() => setSettings(s => ({ ...s, grain: !s.grain }))} className={`w-10 h-5 rounded-full relative transition-colors \${settings.grain ? 'bg-primary' : 'bg-zinc-600'}`}>
+                 <div className={`absolute top-1 left-1 w-3 h-3 bg-white rounded-full transition-transform \${settings.grain ? 'translate-x-5' : 'translate-x-0'}`} />
                </button>
              </div>
           </section>
@@ -249,7 +304,7 @@ const App: React.FC = () => {
                </Select>
             </div>
             <div className="grid grid-cols-2 gap-4 mt-2">
-               <Select label="People Position" value={settings.personPosition} onChange={(e) => { const pos = e.target.value as any; let safe = settings.safeArea; if(pos === 'left') safe = 'right'; if(pos === 'right') safe = 'left'; setSettings({...settings, personPosition: pos, safeArea: safe }); }}>
+               <Select label={settings.mode === 'mockup' ? "Mockup Position" : "People Position"} value={settings.personPosition} onChange={(e) => { const pos = e.target.value as any; let safe = settings.safeArea; if(pos === 'left') safe = 'right'; if(pos === 'right') safe = 'left'; setSettings({...settings, personPosition: pos, safeArea: safe }); }}>
                   <option value="left">Left</option>
                   <option value="center">Center</option>
                   <option value="right">Right</option>
@@ -300,7 +355,7 @@ const App: React.FC = () => {
                  )}
               </div>
               <Button onClick={handleGenerate} isLoading={isGenerating} disabled={!canGenerate} className="w-full md:w-auto md:min-w-[200px] h-12 text-base shadow-[0_0_20px_rgba(255,255,255,0.1)] hover:shadow-[0_0_30px_rgba(255,255,255,0.2)]">
-                {canGenerate ? "Generate Hero BG" : "Upload Subject First"}
+                {canGenerate ? "Generate Hero BG" : (settings.mode === 'person' ? "Upload Subject First" : "Upload Screen First")}
               </Button>
            </div>
            
@@ -309,7 +364,7 @@ const App: React.FC = () => {
                 <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-3">Recent Generations</h4>
                 <div className="flex gap-3 overflow-x-auto pb-4 scrollbar-thin">
                    {history.map(item => (
-                     <div key={item.id} onClick={() => setCurrentResult(item)} className={`relative flex-shrink-0 w-24 h-24 rounded-lg overflow-hidden cursor-pointer border-2 transition-all ${currentResult?.id === item.id ? 'border-primary ring-2 ring-primary/20' : 'border-zinc-800 hover:border-zinc-600'}`}>
+                     <div key={item.id} onClick={() => setCurrentResult(item)} className={`relative flex-shrink-0 w-24 h-24 rounded-lg overflow-hidden cursor-pointer border-2 transition-all \${currentResult?.id === item.id ? 'border-primary ring-2 ring-primary/20' : 'border-zinc-800 hover:border-zinc-600'}`}>
                        <img src={item.imageUrl} className="w-full h-full object-cover" />
                      </div>
                    ))}

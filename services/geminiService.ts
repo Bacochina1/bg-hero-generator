@@ -34,6 +34,7 @@ export const generateHeroBg = async (
 
   // Determine instruction based on whether we are transforming an existing image
   const isTransformation = !!settings.baseImage;
+  const isMockupMode = settings.mode === 'mockup';
 
   // --- PERSON MODE LOGIC ---
   const hasMultiplePeople = settings.personImages.length > 1;
@@ -43,24 +44,43 @@ export const generateHeroBg = async (
 
   let specificInstruction = "";
 
-  specificInstruction = isTransformation
-    ? `[INSTRUÇÃO: ADAPTAÇÃO PARA MOBILE (VERTICAL 9:16) - EXTREME SAFE AREA]
-    A imagem fornecida é a referência de estilo/sujeito (Desktop).
-    SUA TAREFA: Recriar em formato VERTICAL (9:16) com layout "Mobile-First".
-    REGRAS CRÍTICAS DE LAYOUT (PRIORIDADE MÁXIMA):
-    1. SAFE AREA GIGANTE (80% TOPO): Os 80% superiores da imagem DEVEM ser espaço negativo limpo.
-    2. POSIÇÃO DOS SUJEITOS (BOTTOM ANCHOR): ${subjectsTermUpper} deve(m) estar ANCORADA(S) NA BASE DA TELA.
-    3. PÉS/CORPO: Estenda o corpo se necessário.`
-    : `[INSTRUÇÃO: PUBLICIDADE HIGH-END - INTEGRAÇÃO PERFEITA]
-    ATUE COMO UM RETOCADOR PROFISSIONAL. Sua tarefa é criar um Hero Background que integre ${subjectsTerm} (INPUT) na cena com PERFEIÇÃO FOTOREALISTA.
-    O RESULTADO DEVE PARECER UMA FOTO ÚNICA DE ESTÚDIO, NÃO UMA MONTAGEM.
+  if (isMockupMode) {
+    // --- MOCKUP MODE PROMPT ---
+    const deviceType = settings.aspectRatio === '9:16' ? 'SMARTPHONE(S) 3D (iPhone style) High-End' : 'LAPTOP(S) 3D, TABLET(S) ou GLASS INTERFACE flutuante';
+    const numMockups = settings.mockupImages.length;
+    
+    specificInstruction = isTransformation 
+      ? `[INSTRUÇÃO: ADAPTAÇÃO MOBILE MOCKUP]
+      A imagem base é o estilo. ${numMockups > 1 ? 'Os inputs são múltiplos screenshots.' : 'O input é um screenshot.'}
+      TAREFA: Gere um MOCKUP 3D VERTICAL com ${numMockups > 1 ? 'múltiplos devices (Smartphones premium)' : 'um device (Smartphone premium)'} exibindo a(s) tela(s) fornecida(s).
+      POSIÇÃO: O(s) device(s) deve(m) estar ANCORADO(S) NA BASE (Bottom Anchor) ou flutuando no terço inferior.
+      SAFE AREA: 80% do topo livre.`
+      : `[INSTRUÇÃO: GERAÇÃO DE MOCKUP 3D]
+      A(s) imagem(ns) fornecida(s) ${numMockups > 1 ? 'são SCREENSHOTS/PRINTS DE UI' : 'é um SCREENSHOT/PRINT DE UI'}.
+      TAREFA: Crie um background Hero Section integrando MOCKUP(S) 3D REALISTA(S) (${deviceType}) que exibe(m) esta(s) tela(s).
+      ESTILO DO MOCKUP: Clay render, Matte Black, Vidro Fosco ou Alumínio escovado. Deve parecer um produto premium flutuando na cena.
+      POSIÇÃO: O(s) device(s) deve(m) ser o foco, posicionado(s) conforme solicitado (Esq/Dir/Centro), integrado(s) na iluminação.`;
+  } else {
+    // --- PERSON MODE PROMPT ---
+    specificInstruction = isTransformation
+      ? `[INSTRUÇÃO: ADAPTAÇÃO PARA MOBILE (VERTICAL 9:16) - EXTREME SAFE AREA]
+      A imagem fornecida é a referência de estilo/sujeito (Desktop).
+      SUA TAREFA: Recriar em formato VERTICAL (9:16) com layout "Mobile-First".
+      REGRAS CRÍTICAS DE LAYOUT (PRIORIDADE MÁXIMA):
+      1. SAFE AREA GIGANTE (80% TOPO): Os 80% superiores da imagem DEVEM ser espaço negativo limpo.
+      2. POSIÇÃO DOS SUJEITOS (BOTTOM ANCHOR): ${subjectsTermUpper} deve(m) estar ANCORADA(S) NA BASE DA TELA.
+      3. PÉS/CORPO: Estenda o corpo se necessário.`
+      : `[INSTRUÇÃO: PUBLICIDADE HIGH-END - INTEGRAÇÃO PERFEITA]
+      ATUE COMO UM RETOCADOR PROFISSIONAL. Sua tarefa é criar um Hero Background que integre ${subjectsTerm} (INPUT) na cena com PERFEIÇÃO FOTOREALISTA.
+      O RESULTADO DEVE PARECER UMA FOTO ÚNICA DE ESTÚDIO, NÃO UMA MONTAGEM.
 
-    MANDATÓRIO PARA INTEGRAÇÃO:
-    1. ENQUADRAMENTO (CRÍTICO): CORTE NA CINTURA ("Waist-Up" / "Medium Shot"). As pessoas DEVEM nascer da borda inferior da imagem. NUNCA mostre os pés ou pernas inteiras.
-    2. ANCORAGEM: A base da imagem deve cortar o torso/cintura dos sujeitos. Eles não podem flutuar no meio do nada.
-    3. ESCALA REALISTA: Os sujeitos devem ocupar uma porção significativa da altura (aprox. 50-70% da altura da imagem), impondo presença.
-    4. ILUMINAÇÃO: Use Rim Light para separar o sujeito do fundo escuro.
-    5. COLOR MATCH: Unifique a temperatura de cor do sujeito com o ambiente (Color Grading).`;
+      MANDATÓRIO PARA INTEGRAÇÃO:
+      1. ENQUADRAMENTO (CRÍTICO): CORTE NA CINTURA ("Waist-Up" / "Medium Shot"). As pessoas DEVEM nascer da borda inferior da imagem. NUNCA mostre os pés ou pernas inteiras.
+      2. ANCORAGEM: A base da imagem deve cortar o torso/cintura dos sujeitos. Eles não podem flutuar no meio do nada.
+      3. ESCALA REALISTA: Os sujeitos devem ocupar uma porção significativa da altura (aprox. 50-70% da altura da imagem), impondo presença.
+      4. ILUMINAÇÃO: Use Rim Light para separar o sujeito do fundo escuro.
+      5. COLOR MATCH: Unifique a temperatura de cor do sujeito com o ambiente (Color Grading).`;
+  }
 
   // Construct the prompt
   const finalPrompt = `
@@ -69,10 +89,11 @@ ${specificInstruction}
 [COMPOSIÇÃO]
 - Aspect ratio e resolução: ${settings.aspectRatio} (${settings.resolution})
 - Qualidade de Render: ${settings.quality} (Ultra Detail)
-- Posição ${hasMultiplePeople ? 'dos sujeitos' : 'da pessoa'}: ${isTransformation ? 'BAIXO (BOTTOM/ANCHORED)' : (settings.personPosition === 'left' ? 'Esquerda' : settings.personPosition === 'right' ? 'Direita' : 'Centro')}
+- Posição ${isMockupMode ? 'do Mockup 3D' : (hasMultiplePeople ? 'dos sujeitos' : 'da pessoa')}: ${isTransformation ? 'BAIXO (BOTTOM/ANCHORED)' : (settings.personPosition === 'left' ? 'Esquerda' : settings.personPosition === 'right' ? 'Direita' : 'Centro')}
 - Safe area para texto: ${isTransformation ? 'TOPO (80% da altura livre)' : (settings.safeArea === 'left' ? 'Esquerda' : settings.safeArea === 'right' ? 'Direita' : 'Centro')}
 - Use regra dos terços e hierarquia de luz.
-- ${isLargeGroup ? 'COMPOSIÇÃO DE GRUPO: Organize as pessoas de forma coesa e natural.' : ''}
+- ${!isMockupMode && isLargeGroup ? 'COMPOSIÇÃO DE GRUPO: Organize as pessoas de forma coesa e natural.' : ''}
+- ${isMockupMode ? 'PERSPECTIVA 3D: O(s) device(s) deve(m) estar levemente rotacionado(s) (isométrico ou 3/4) para dar profundidade, nunca totalmente chapado (flat). Reflexos realistas na tela.' : ''}
 - Adicionar elementos: ${settings.elementsText || 'Nenhum'} e/ou referências visuais das imagens extras.
 - Estilo do fundo: gradientes escuros + glows controlados, vidro/acrílico, partículas sutis, shapes 3D flutuantes, UI fragments desfocados.
 
@@ -123,12 +144,19 @@ ${settings.negativePrompt}
   // 2. Text Prompt
   parts.push({ text: finalPrompt });
 
-  // 3. Subject Images
-  if (settings.personImages.length > 0) {
-    for (const img of settings.personImages) {
-      const personPart = await fileToPart(img);
-      parts.push(personPart);
-    }
+  // 3. Subject Images (Either Person OR Mockup)
+  if (isMockupMode && settings.mockupImages.length > 0) {
+      // Send the screenshot(s)/print(s)
+      for (const img of settings.mockupImages) {
+          const mockupPart = await fileToPart(img);
+          parts.push(mockupPart);
+      }
+  } else if (!isMockupMode && settings.personImages.length > 0) {
+      // Send person images
+      for (const img of settings.personImages) {
+          const personPart = await fileToPart(img);
+          parts.push(personPart);
+      }
   }
 
   // 4. Element Images
@@ -155,7 +183,7 @@ ${settings.negativePrompt}
     if (response.candidates && response.candidates[0].content.parts) {
       for (const part of response.candidates[0].content.parts) {
         if (part.inlineData) {
-          imageUrl = `data:${part.inlineData.mimeType};base64,${part.inlineData.data}`;
+          imageUrl = `data:${part.inlineData.mimeType};base64,\${part.inlineData.data}`;
           break;
         }
       }
