@@ -183,7 +183,7 @@ ${settings.negativePrompt}
     if (response.candidates && response.candidates[0].content.parts) {
       for (const part of response.candidates[0].content.parts) {
         if (part.inlineData) {
-          imageUrl = `data:${part.inlineData.mimeType};base64,\${part.inlineData.data}`;
+          imageUrl = `data:${part.inlineData.mimeType};base64,${part.inlineData.data}`;
           break;
         }
       }
