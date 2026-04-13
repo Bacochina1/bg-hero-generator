@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { generateHeroBg } from './services/geminiService';
-import { GenerationSettings, GenerationResult, Preset, GenerationMode } from './types';
+import { GenerationSettings, GenerationResult, Preset } from './types';
 import { Input, TextArea, Select, Slider } from './components/ui/Input';
 import { Button } from './components/ui/Button';
 import { PreviewArea } from './components/PreviewArea';
@@ -24,9 +24,7 @@ const PRESETS: Preset[] = [
 ];
 
 const INITIAL_SETTINGS: GenerationSettings = {
-  mode: 'person',
   personImages: [], 
-  mockupImage: null,
   elementImages: [],
   elementsText: "",
   visualIdentity: "",
@@ -64,9 +62,7 @@ const App: React.FC = () => {
   };
 
   const executeGeneration = async (config: GenerationSettings) => {
-    // Validation
-    if (config.mode === 'person' && config.personImages.length === 0) return;
-    if (config.mode === 'mockup' && !config.mockupImage) return;
+    if (config.personImages.length === 0) return;
     
     setIsGenerating(true);
     setError(null);
@@ -113,13 +109,11 @@ const App: React.FC = () => {
     executeGeneration(mobileSettings);
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, field: 'personImages' | 'elementImages' | 'mockupImage') => {
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, field: 'personImages' | 'elementImages') => {
     if (e.target.files && e.target.files.length > 0) {
       if (field === 'elementImages') {
         const files = Array.from(e.target.files).slice(0, 6);
         setSettings(prev => ({ ...prev, [field]: files }));
-      } else if (field === 'mockupImage') {
-        setSettings(prev => ({ ...prev, mockupImage: e.target.files ? e.target.files[0] : null }));
       } else {
         const newFiles = Array.from(e.target.files);
         setSettings(prev => {
@@ -140,9 +134,7 @@ const App: React.FC = () => {
     }));
   };
 
-  const canGenerate = settings.mode === 'person' 
-    ? settings.personImages.length > 0 
-    : !!settings.mockupImage;
+  const canGenerate = settings.personImages.length > 0;
 
   return (
     <div className="min-h-screen bg-background text-zinc-200 selection:bg-primary selection:text-white">
@@ -164,74 +156,37 @@ const App: React.FC = () => {
         {/* Left Column: Controls */}
         <div className="lg:col-span-4 flex flex-col gap-8 h-[calc(100vh-100px)] overflow-y-auto pr-2 pb-20 custom-scrollbar">
           
-          {/* Mode Selector */}
-          <div className="bg-surfaceHighlight p-1 rounded-lg flex gap-1 border border-zinc-700">
-            <button 
-              onClick={() => setSettings(s => ({...s, mode: 'person'}))}
-              className={`flex-1 py-2 rounded-md text-xs font-semibold uppercase tracking-wide transition-all ${settings.mode === 'person' ? 'bg-zinc-700 text-white shadow-sm' : 'text-gray-400 hover:text-white hover:bg-zinc-800'}`}
-            >
-              Person / Team
-            </button>
-            <button 
-              onClick={() => setSettings(s => ({...s, mode: 'mockup'}))}
-              className={`flex-1 py-2 rounded-md text-xs font-semibold uppercase tracking-wide transition-all ${settings.mode === 'mockup' ? 'bg-zinc-700 text-white shadow-sm' : 'text-gray-400 hover:text-white hover:bg-zinc-800'}`}
-            >
-              3D Mockup
-            </button>
-          </div>
-
-          {/* Dynamic Section: Person Upload OR Mockup Upload */}
+          {/* Section A: Subject Upload */}
           <section className="animate-[fadeIn_0.3s_ease-out]">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-sm font-medium text-white flex items-center gap-2">
                 <span className="w-5 h-5 rounded-full bg-zinc-800 text-xs flex items-center justify-center text-gray-400">1</span>
-                {settings.mode === 'person' ? 'Subject(s)' : 'Screen / Print'}
+                Subject(s)
               </h3>
-              {settings.mode === 'person' && <span className="text-[10px] text-zinc-500 uppercase">{settings.personImages.length}/{MAX_PEOPLE} People</span>}
+              <span className="text-[10px] text-zinc-500 uppercase">{settings.personImages.length}/{MAX_PEOPLE} People</span>
             </div>
 
-            {settings.mode === 'person' ? (
-              // --- PERSON UPLOAD UI ---
-              settings.personImages.length === 0 ? (
-                <div className="relative group cursor-pointer border-2 border-dashed border-zinc-700 hover:border-zinc-500 rounded-xl transition-all h-32 flex items-center justify-center bg-zinc-900/50 overflow-hidden">
-                   <input type="file" accept="image/*" multiple onChange={(e) => handleFileChange(e, 'personImages')} className="absolute inset-0 opacity-0 cursor-pointer z-10"/>
-                   <div className="text-center p-4">
-                      <p className="text-zinc-400 text-sm group-hover:text-white">Upload Subject</p>
-                      <p className="text-zinc-600 text-xs mt-1">PNG/JPG</p>
-                   </div>
-                </div>
-              ) : (
-                <div className="grid grid-cols-3 gap-3">
-                   {settings.personImages.map((img, idx) => (
-                      <div key={idx} className="relative aspect-square rounded-lg overflow-hidden border border-zinc-700 bg-zinc-900 group">
-                         <img src={URL.createObjectURL(img)} className="w-full h-full object-cover"/>
-                         <button onClick={() => removePersonImage(idx)} className="absolute top-1 right-1 w-5 h-5 bg-black/70 hover:bg-red-500 text-white rounded-full flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-all">×</button>
-                      </div>
-                   ))}
-                   {settings.personImages.length < MAX_PEOPLE && (
-                      <div className="relative aspect-square rounded-lg border-2 border-dashed border-zinc-700 hover:border-zinc-500 bg-zinc-900/30 flex flex-col items-center justify-center cursor-pointer group">
-                         <input type="file" accept="image/*" multiple onChange={(e) => handleFileChange(e, 'personImages')} className="absolute inset-0 opacity-0 cursor-pointer z-10"/>
-                         <span className="text-2xl text-zinc-500 group-hover:text-white">+</span>
-                      </div>
-                   )}
-                </div>
-              )
-            ) : (
-              // --- MOCKUP UPLOAD UI ---
+            {settings.personImages.length === 0 ? (
               <div className="relative group cursor-pointer border-2 border-dashed border-zinc-700 hover:border-zinc-500 rounded-xl transition-all h-32 flex items-center justify-center bg-zinc-900/50 overflow-hidden">
-                 <input type="file" accept="image/*" onChange={(e) => handleFileChange(e, 'mockupImage')} className="absolute inset-0 opacity-0 cursor-pointer z-10"/>
-                 {settings.mockupImage ? (
-                   <div className="w-full h-full relative">
-                      <img src={URL.createObjectURL(settings.mockupImage)} className="w-full h-full object-contain opacity-50 group-hover:opacity-30 transition-opacity" />
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <span className="bg-black/50 px-2 py-1 rounded text-xs text-white backdrop-blur-sm">Change Image</span>
-                      </div>
-                   </div>
-                 ) : (
-                   <div className="text-center p-4">
-                      <p className="text-zinc-400 text-sm group-hover:text-white">Upload Screenshot / UI</p>
-                      <p className="text-zinc-600 text-xs mt-1">We'll render a 3D device around it</p>
-                   </div>
+                 <input type="file" accept="image/*" multiple onChange={(e) => handleFileChange(e, 'personImages')} className="absolute inset-0 opacity-0 cursor-pointer z-10"/>
+                 <div className="text-center p-4">
+                    <p className="text-zinc-400 text-sm group-hover:text-white">Upload Subject</p>
+                    <p className="text-zinc-600 text-xs mt-1">PNG/JPG · Up to {MAX_PEOPLE} images</p>
+                 </div>
+              </div>
+            ) : (
+              <div className="grid grid-cols-3 gap-3">
+                 {settings.personImages.map((img, idx) => (
+                    <div key={idx} className="relative aspect-square rounded-lg overflow-hidden border border-zinc-700 bg-zinc-900 group">
+                       <img src={URL.createObjectURL(img)} className="w-full h-full object-cover"/>
+                       <button onClick={() => removePersonImage(idx)} className="absolute top-1 right-1 w-5 h-5 bg-black/70 hover:bg-red-500 text-white rounded-full flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-all">×</button>
+                    </div>
+                 ))}
+                 {settings.personImages.length < MAX_PEOPLE && (
+                    <div className="relative aspect-square rounded-lg border-2 border-dashed border-zinc-700 hover:border-zinc-500 bg-zinc-900/30 flex flex-col items-center justify-center cursor-pointer group">
+                       <input type="file" accept="image/*" multiple onChange={(e) => handleFileChange(e, 'personImages')} className="absolute inset-0 opacity-0 cursor-pointer z-10"/>
+                       <span className="text-2xl text-zinc-500 group-hover:text-white">+</span>
+                    </div>
                  )}
               </div>
             )}
@@ -294,7 +249,7 @@ const App: React.FC = () => {
                </Select>
             </div>
             <div className="grid grid-cols-2 gap-4 mt-2">
-               <Select label={settings.mode === 'mockup' ? "Mockup Position" : "People Position"} value={settings.personPosition} onChange={(e) => { const pos = e.target.value as any; let safe = settings.safeArea; if(pos === 'left') safe = 'right'; if(pos === 'right') safe = 'left'; setSettings({...settings, personPosition: pos, safeArea: safe }); }}>
+               <Select label="People Position" value={settings.personPosition} onChange={(e) => { const pos = e.target.value as any; let safe = settings.safeArea; if(pos === 'left') safe = 'right'; if(pos === 'right') safe = 'left'; setSettings({...settings, personPosition: pos, safeArea: safe }); }}>
                   <option value="left">Left</option>
                   <option value="center">Center</option>
                   <option value="right">Right</option>
@@ -345,7 +300,7 @@ const App: React.FC = () => {
                  )}
               </div>
               <Button onClick={handleGenerate} isLoading={isGenerating} disabled={!canGenerate} className="w-full md:w-auto md:min-w-[200px] h-12 text-base shadow-[0_0_20px_rgba(255,255,255,0.1)] hover:shadow-[0_0_30px_rgba(255,255,255,0.2)]">
-                {canGenerate ? "Generate Hero BG" : (settings.mode === 'person' ? "Upload Subject First" : "Upload Screen First")}
+                {canGenerate ? "Generate Hero BG" : "Upload Subject First"}
               </Button>
            </div>
            

@@ -2,13 +2,11 @@ export type AspectRatio = '16:9' | '9:16' | '1:1' | '4:5';
 export type PersonPosition = 'left' | 'right' | 'center';
 export type SafeArea = 'left' | 'right' | 'center';
 export type LightingStyle = 'Soft studio' | 'Neon glow' | 'Rim light' | 'Cinematic';
-export type GenerationMode = 'person' | 'mockup';
+
 export type ImageQuality = '1K' | '2K' | '4K';
 
 export interface GenerationSettings {
-  mode: GenerationMode; 
   personImages: File[]; 
-  mockupImage: File | null; 
   elementImages: File[];
   elementsText: string;
   visualIdentity: string;
