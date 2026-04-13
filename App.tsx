@@ -166,13 +166,13 @@ const App: React.FC = () => {
           <div className="bg-surfaceHighlight p-1 rounded-lg flex gap-1 border border-zinc-700">
             <button 
               onClick={() => setSettings(s => ({...s, mode: 'person'}))}
-              className={`flex-1 py-2 rounded-md text-xs font-semibold uppercase tracking-wide transition-all \${settings.mode === 'person' ? 'bg-zinc-700 text-white shadow-sm' : 'text-gray-400 hover:text-white hover:bg-zinc-800'}`}
+              className={`flex-1 py-2 rounded-md text-xs font-semibold uppercase tracking-wide transition-all ${settings.mode === 'person' ? 'bg-zinc-700 text-white shadow-sm' : 'text-gray-400 hover:text-white hover:bg-zinc-800'}`}
             >
               Person / Team
             </button>
             <button 
               onClick={() => setSettings(s => ({...s, mode: 'mockup'}))}
-              className={`flex-1 py-2 rounded-md text-xs font-semibold uppercase tracking-wide transition-all \${settings.mode === 'mockup' ? 'bg-zinc-700 text-white shadow-sm' : 'text-gray-400 hover:text-white hover:bg-zinc-800'}`}
+              className={`flex-1 py-2 rounded-md text-xs font-semibold uppercase tracking-wide transition-all ${settings.mode === 'mockup' ? 'bg-zinc-700 text-white shadow-sm' : 'text-gray-400 hover:text-white hover:bg-zinc-800'}`}
             >
               3D Mockup
             </button>
@@ -187,8 +187,8 @@ const App: React.FC = () => {
               </h3>
               <span className="text-[10px] text-zinc-500 uppercase">
                 {settings.mode === 'person' 
-                  ? `\${settings.personImages.length}/\${MAX_IMAGES} People` 
-                  : `\${settings.mockupImages.length}/\${MAX_IMAGES} Screens`}
+                  ? `${settings.personImages.length}/${MAX_IMAGES} People` 
+                  : `${settings.mockupImages.length}/${MAX_IMAGES} Screens`}
               </span>
             </div>
 
@@ -262,8 +262,8 @@ const App: React.FC = () => {
             </div>
             <TextArea label="Style Description" value={settings.visualIdentity} onChange={(e) => setSettings({...settings, visualIdentity: e.target.value})} className="h-32"/>
             <div className="grid grid-cols-2 gap-4">
-              <Slider label="Style Strength" min={0} max={100} value={settings.styleStrength} valueDisplay={\`\${settings.styleStrength}%\`} onChange={(e) => setSettings({...settings, styleStrength: Number(e.target.value)})}/>
-              <Slider label="Depth of Field" min={0} max={100} value={settings.depthOfField} valueDisplay={\`\${settings.depthOfField}%\`} onChange={(e) => setSettings({...settings, depthOfField: Number(e.target.value)})}/>
+              <Slider label="Style Strength" min={0} max={100} value={settings.styleStrength} valueDisplay={`${settings.styleStrength}%`} onChange={(e) => setSettings({...settings, styleStrength: Number(e.target.value)})}/>
+              <Slider label="Depth of Field" min={0} max={100} value={settings.depthOfField} valueDisplay={`${settings.depthOfField}%`} onChange={(e) => setSettings({...settings, depthOfField: Number(e.target.value)})}/>
             </div>
              <Select label="Lighting Style" value={settings.lighting} onChange={(e) => setSettings({...settings, lighting: e.target.value as any})}>
               <option value="Soft studio">Soft Studio</option>
@@ -273,8 +273,8 @@ const App: React.FC = () => {
             </Select>
              <div className="flex items-center justify-between bg-surfaceHighlight rounded-lg p-3 border border-zinc-700">
                <span className="text-sm text-gray-300">Add Film Grain</span>
-               <button onClick={() => setSettings(s => ({ ...s, grain: !s.grain }))} className={`w-10 h-5 rounded-full relative transition-colors \${settings.grain ? 'bg-primary' : 'bg-zinc-600'}`}>
-                 <div className={`absolute top-1 left-1 w-3 h-3 bg-white rounded-full transition-transform \${settings.grain ? 'translate-x-5' : 'translate-x-0'}`} />
+               <button onClick={() => setSettings(s => ({ ...s, grain: !s.grain }))} className={`w-10 h-5 rounded-full relative transition-colors ${settings.grain ? 'bg-primary' : 'bg-zinc-600'}`}>
+                 <div className={`absolute top-1 left-1 w-3 h-3 bg-white rounded-full transition-transform ${settings.grain ? 'translate-x-5' : 'translate-x-0'}`} />
                </button>
              </div>
           </section>
@@ -364,7 +364,7 @@ const App: React.FC = () => {
                 <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-3">Recent Generations</h4>
                 <div className="flex gap-3 overflow-x-auto pb-4 scrollbar-thin">
                    {history.map(item => (
-                     <div key={item.id} onClick={() => setCurrentResult(item)} className={`relative flex-shrink-0 w-24 h-24 rounded-lg overflow-hidden cursor-pointer border-2 transition-all \${currentResult?.id === item.id ? 'border-primary ring-2 ring-primary/20' : 'border-zinc-800 hover:border-zinc-600'}`}>
+                     <div key={item.id} onClick={() => setCurrentResult(item)} className={`relative flex-shrink-0 w-24 h-24 rounded-lg overflow-hidden cursor-pointer border-2 transition-all ${currentResult?.id === item.id ? 'border-primary ring-2 ring-primary/20' : 'border-zinc-800 hover:border-zinc-600'}`}>
                        <img src={item.imageUrl} className="w-full h-full object-cover" />
                      </div>
                    ))}
